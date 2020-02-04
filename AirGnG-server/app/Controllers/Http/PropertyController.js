@@ -1,4 +1,6 @@
-'use strict'
+"use strict";
+
+const Property = use("App/Models/Property");
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
@@ -17,19 +19,10 @@ class PropertyController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
-  }
+  async index() {
+    const properties = Property.all()
 
-  /**
-   * Render a form to be used for creating a new property.
-   * GET properties/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create ({ request, response, view }) {
+    return properties
   }
 
   /**
@@ -40,8 +33,7 @@ class PropertyController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
-  }
+  async store({ request, response }) {}
 
   /**
    * Display a single property.
@@ -52,7 +44,12 @@ class PropertyController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
+  async show({ params }) {
+    const property = await Property.findOrFail(params.id)
+
+    await property.load('images')
+
+    return property
   }
 
   /**
@@ -64,19 +61,7 @@ class PropertyController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async edit ({ params, request, response, view }) {
-  }
-
-  /**
-   * Update property details.
-   * PUT or PATCH properties/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async update ({ params, request, response }) {
-  }
+  async edit({ params, request, response, view }) {}
 
   /**
    * Delete a property with id.
@@ -86,8 +71,15 @@ class PropertyController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy({ params, auth, response }) {
+    const property = await Property.findOrFail(params.id)
+
+    if (property.user_id !== auth.user.id) {
+      return response.status(401).send({ error: 'Not authorized' })
+    }
+
+    await property.delete()
   }
 }
 
-module.exports = PropertyController
+module.exports = PropertyController;
